@@ -47,3 +47,6 @@ vite.config.ts.timestamp-*
 
 # Misc
 .DS_Store
+
+frontend/node_modules/
+frontend/dist/
