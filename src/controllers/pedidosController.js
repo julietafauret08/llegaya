@@ -199,3 +199,29 @@ exports.cambiarEstado = async (req, res) => {
     res.status(500).json({ error: 'Error en el servidor' });
   }
 };
+// Solo admin: obtener métricas para el dashboard
+exports.obtenerMetricas = async (req, res) => {
+  try {
+    // 1. Total recaudado (solo pedidos pagados o entregados)
+    const [recaudacion] = await pool.query(
+      "SELECT SUM(total) AS total FROM pedidos WHERE estado IN ('pagado', 'entregado')"
+    );
+    
+    // 2. Cantidad total de pedidos
+    const [pedidosTotales] = await pool.query("SELECT COUNT(*) AS total FROM pedidos");
+    
+    // 3. Ventas de hoy
+    const [ventasHoy] = await pool.query(
+      "SELECT COUNT(*) AS total FROM pedidos WHERE DATE(fecha) = CURDATE()"
+    );
+
+    res.json({
+      recaudacionTotal: recaudacion[0].total || 0,
+      pedidosTotales: pedidosTotales[0].total || 0,
+      ventasHoy: ventasHoy[0].total || 0
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener métricas' });
+  }
+};

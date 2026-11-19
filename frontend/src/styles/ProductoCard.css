@@ -1,0 +1,12 @@
+/* src/styles/ProductoCard.css */
+.producto { background: var(--superficie); border-radius: 16px; overflow: hidden; box-shadow: var(--sombra); display: flex; flex-direction: column; transition: transform 0.2s; }
+.producto:hover { transform: translateY(-4px); }
+.producto__imagen { height: 180px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
+.producto__imagen img { width: 100%; height: 100%; object-fit: cover; }
+.producto__emoji { font-size: 4rem; }
+.producto__cuerpo { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+.producto__categoria { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primario); font-weight: 700; }
+.producto__cuerpo h3 { margin: 0; font-size: 1.2rem; color: var(--texto); }
+.producto__descripcion { margin: 0; color: var(--suave); font-size: 0.9rem; flex: 1; line-height: 1.4; }
+.producto__pie { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; }
+.producto__precio { font-size: 1.3rem; color: var(--texto); font-weight: 800; }

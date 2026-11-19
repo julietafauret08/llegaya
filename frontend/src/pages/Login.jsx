@@ -22,7 +22,14 @@ export default function Login() {
       setEnviando(true);
       const usuario = await login(email.trim(), password);
       toast(`¡Hola, ${usuario.nombre}!`);
-      navigate(location.state?.desde || '/');
+      
+      // ACÁ ESTÁ LA MAGIA: Si es admin va al panel, si no, a donde iba
+      if (usuario.rol === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate(location.state?.desde || '/');
+      }
+      
     } catch (err) {
       alertaError('No pudimos iniciar sesión', err.message);
     } finally {
@@ -64,6 +71,9 @@ export default function Login() {
       <p className="pie-formulario">
         ¿No tenés cuenta? <Link to="/registro">Registrate</Link>
       </p>
+      <p className="pie-formulario">
+  <Link to="/recuperar-password">¿Olvidaste tu contraseña?</Link>
+</p>
     </section>
   );
 }

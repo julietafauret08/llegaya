@@ -4,24 +4,23 @@ import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { formatearPrecio } from '../utils/formato.js';
 import { toast } from '../utils/alertas.js';
+import { Trash2, Plus, Minus, ArrowLeft, ShieldCheck } from 'lucide-react';
+import '../styles/Carrito.css';
 
 export default function Carrito() {
   const { items, cambiarCantidad, quitar, vaciar, total, cantidadTotal } = useCart();
-  const { usuario, token } = useAuth(); // Aseguramos usar el token del AuthContext
+  const { usuario, token } = useAuth();
   const navigate = useNavigate();
 
-  const [direccion, setDireccion] = useState('');
+  // ACÁ ESTÁ EL CAMBIO: Si el usuario tiene dirección guardada, la autocompletamos
+  const [direccion, setDireccion] = useState(usuario?.direccion || '');
   const [observaciones, setObservaciones] = useState('');
   const [procesando, setProcesando] = useState(false);
 
   const handleFinalizarCompra = async () => {
-    if (!usuario) {
+    if (!usuario || !token) {
       toast('Tenés que iniciar sesión para comprar');
       navigate('/login', { state: { desde: '/carrito' } });
-      return;
-    }
-    if (items.length === 0) {
-      toast('El carrito está vacío');
       return;
     }
     if (!direccion.trim()) {
@@ -40,138 +39,101 @@ export default function Carrito() {
         body: JSON.stringify({
           direccion_entrega: direccion.trim(),
           observaciones: observaciones.trim() || null,
-          items: items.map((i) => ({
-            id_producto: i.id_producto,
-            cantidad: i.cantidad
-          }))
+          items: items.map((i) => ({ id_producto: i.id_producto, cantidad: i.cantidad }))
         })
       });
 
       const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        toast(data.error || 'No se pudo crear el pedido');
-        setProcesando(false);
-        return;
-      }
-
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        toast('No se pudo iniciar el pago');
-        setProcesando(false);
-      }
+      if (!res.ok) throw new Error(data.error || 'No se pudo crear el pedido');
+      
+      if (data.init_point) window.location.href = data.init_point;
+      else throw new Error('No se pudo iniciar el pago');
+      
     } catch (err) {
-      console.error(err);
-      toast('Error de conexión');
+      toast(err.message);
       setProcesando(false);
     }
   };
 
   if (items.length === 0) {
     return (
-      <section className="carrito carrito--vacio">
-        <h1>Tu carrito está vacío</h1>
-        <p>Todavía no agregaste ningún producto.</p>
-        <Link to="/" className="boton">Ver catálogo</Link>
-      </section>
+      <div className="carrito-vacio">
+        <div className="carrito-vacio-icon">🛒</div>
+        <h2>Tu carrito está vacío</h2>
+        <p>Parece que todavía no agregaste nada.</p>
+        <Link to="/" className="btn-primario">Volver al catálogo</Link>
+      </div>
     );
   }
 
   return (
-    <section className="carrito">
-      <h1>Tu carrito ({cantidadTotal} {cantidadTotal === 1 ? 'ítem' : 'ítems'})</h1>
+    <div className="carrito-page">
+      <div className="carrito-header">
+        <Link to="/" className="btn-volver"><ArrowLeft size={20} /> Seguir comprando</Link>
+        <h1>Tu Carrito ({cantidadTotal} {cantidadTotal === 1 ? 'ítem' : 'ítems'})</h1>
+      </div>
 
-      <ul className="carrito__lista">
-        {items.map((item) => (
-          <li key={item.id_producto} className="carrito__item">
-            <div className="carrito__imagen">
-              {item.imagen ? (
-                <img src={`/img/${item.imagen}`} alt={item.nombre} />
-              ) : (
-                <span>🍽️</span>
-              )}
+      <div className="carrito-layout">
+        {/* COLUMNA IZQUIERDA: LISTA */}
+        <div className="carrito-items-col">
+          {items.map((item) => (
+            <div key={item.id_producto} className="item-card">
+              <div className="item-imagen">
+                {item.imagen ? <img src={`/img/${item.imagen}`} alt={item.nombre} /> : <span>🍽️</span>}
+              </div>
+              <div className="item-info">
+                <h3>{item.nombre}</h3>
+                <p className="item-precio">{formatearPrecio(item.precio)}</p>
+              </div>
+              <div className="item-controles">
+                <button onClick={() => cambiarCantidad(item.id_producto, item.cantidad - 1)} disabled={item.cantidad <= 1}><Minus size={16} /></button>
+                <span>{item.cantidad}</span>
+                <button onClick={() => cambiarCantidad(item.id_producto, item.cantidad + 1)} disabled={item.cantidad >= item.stock}><Plus size={16} /></button>
+              </div>
+              <div className="item-subtotal">
+                {formatearPrecio(item.precio * item.cantidad)}
+              </div>
+              <button className="btn-eliminar" onClick={() => quitar(item.id_producto)}><Trash2 size={20} /></button>
+            </div>
+          ))}
+          <button className="btn-vaciar" onClick={vaciar}>Vaciar carrito</button>
+        </div>
+
+        {/* COLUMNA DERECHA: RESUMEN Y PAGO */}
+        <div className="carrito-checkout-col">
+          <div className="checkout-card">
+            <h2>Resumen de compra</h2>
+            
+            <div className="checkout-row">
+              <span>Subtotal</span>
+              <span>{formatearPrecio(total)}</span>
+            </div>
+            <div className="checkout-row">
+              <span>Envío</span>
+              <span style={{ color: '#059669', fontWeight: 600 }}>Gratis</span>
+            </div>
+            
+            <hr className="checkout-divider" />
+            
+            <div className="checkout-total">
+              <span>Total</span>
+              <strong>{formatearPrecio(total)}</strong>
             </div>
 
-            <div className="carrito__info">
-              <h3>{item.nombre}</h3>
-              <p className="carrito__precio-unitario">{formatearPrecio(item.precio)} c/u</p>
+            <div className="checkout-form">
+              <h3>Datos de entrega</h3>
+              <input type="text" placeholder="Dirección completa *" value={direccion} onChange={(e) => setDireccion(e.target.value)} required />
+              <textarea placeholder="Observaciones (opcional)" rows={2} value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
             </div>
 
-            <div className="carrito__cantidad">
-              <button
-                onClick={() => cambiarCantidad(item.id_producto, item.cantidad - 1)}
-                disabled={item.cantidad <= 1}
-                aria-label="Restar"
-              >
-                −
-              </button>
-              <span>{item.cantidad}</span>
-              <button
-                onClick={() => cambiarCantidad(item.id_producto, item.cantidad + 1)}
-                disabled={item.cantidad >= item.stock}
-                aria-label="Sumar"
-              >
-                +
-              </button>
-            </div>
-
-            <strong className="carrito__subtotal">
-              {formatearPrecio(item.precio * item.cantidad)}
-            </strong>
-
-            <button
-              className="carrito__quitar"
-              onClick={() => {
-                quitar(item.id_producto);
-                toast('Producto eliminado');
-              }}
-              aria-label={`Quitar ${item.nombre}`}
-            >
-              ✕
+            <button className="btn-pagar" onClick={handleFinalizarCompra} disabled={procesando}>
+              {procesando ? 'Procesando...' : 'Finalizar y pagar'}
             </button>
-          </li>
-        ))}
-      </ul>
-
-      <div className="carrito__entrega">
-        <h2>Datos de entrega</h2>
-        <label className="campo">
-          <span>Dirección *</span>
-          <input
-            type="text"
-            value={direccion}
-            onChange={(e) => setDireccion(e.target.value)}
-            placeholder="Calle, número, piso, ciudad"
-            required
-          />
-        </label>
-        <label className="campo">
-          <span>Observaciones (opcional)</span>
-          <textarea
-            value={observaciones}
-            onChange={(e) => setObservaciones(e.target.value)}
-            placeholder="Timbre, referencias, aclaraciones…"
-            rows={2}
-          />
-        </label>
-      </div>
-
-      <div className="carrito__resumen">
-        <div className="carrito__total">
-          <span>Total</span>
-          <strong>{formatearPrecio(total)}</strong>
-        </div>
-
-        <div className="carrito__acciones">
-          <button className="boton boton--secundario" onClick={vaciar} disabled={procesando}>
-            Vaciar carrito
-          </button>
-          <button className="boton" onClick={handleFinalizarCompra} disabled={procesando}>
-            {procesando ? 'Procesando…' : 'Finalizar y pagar'}
-          </button>
+            
+            <p className="checkout-secure"><ShieldCheck size={16} /> Pago 100% seguro con Mercado Pago</p>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer'); // NUEVO
 const pool = require('../db');
 
 const crearToken = (usuario) =>
@@ -97,5 +98,91 @@ exports.perfil = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error en el servidor' });
+  }
+};
+
+// ==========================================
+// NUEVO: RECUPERACIÓN DE CONTRASEÑA
+// ==========================================
+
+exports.solicitarRecuperacion = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const [filas] = await pool.query('SELECT * FROM usuarios WHERE email = ?', [email.trim().toLowerCase()]);
+    if (filas.length === 0) return res.status(404).json({ error: 'El email no está registrado' });
+
+    const usuario = filas[0];
+    
+    // Token temporal que dura 1 hora
+    const token = jwt.sign({ id: usuario.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const link = `${process.env.FRONTEND_URL}/restablecer-password/${token}`;
+
+    await transporter.sendMail({
+      from: '"LlegaYa" <no-reply@llegaya.com>',
+      to: email,
+      subject: 'Recuperación de contraseña - LlegaYa',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #e63946;">Hola, ${usuario.nombre}</h2>
+          <p>Recibimos una solicitud para restablecer tu contraseña en LlegaYa.</p>
+          <p>Hacé clic en el siguiente botón para crear una nueva (válido por 1 hora):</p>
+          <a href="${link}" style="display: inline-block; background: #e63946; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0;">Restablecer contraseña</a>
+          <p>Si no fuiste vos, podés ignorar este correo.</p>
+        </div>
+      `
+    });
+
+    res.json({ mensaje: 'Correo enviado con éxito' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al enviar el correo' });
+  }
+};
+
+exports.restablecerPassword = async (req, res) => {
+  const { token, nuevaPassword } = req.body;
+  
+  if (!nuevaPassword || nuevaPassword.length < 6) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const hash = await bcrypt.hash(nuevaPassword, 10);
+
+    await pool.query('UPDATE usuarios SET password = ? WHERE id_usuario = ?', [hash, decoded.id]);
+    
+    res.json({ mensaje: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    res.status(400).json({ error: 'El enlace es inválido o expiró' });
+  }
+};
+exports.actualizarPerfil = async (req, res) => {
+  try {
+    const { nombre, apellido, telefono, direccion } = req.body;
+    const id_usuario = req.usuario.id; // Viene del token
+
+    if (!nombre || !apellido) {
+      return res.status(400).json({ error: 'El nombre y apellido son obligatorios' });
+    }
+
+    await pool.query(
+      'UPDATE usuarios SET nombre = ?, apellido = ?, telefono = ?, direccion = ? WHERE id_usuario = ?',
+      [nombre.trim(), apellido.trim(), telefono || null, direccion || null, id_usuario]
+    );
+
+    res.json({ mensaje: 'Perfil actualizado correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar el perfil' });
   }
 };

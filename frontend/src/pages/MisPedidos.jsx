@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext.jsx'; // <--- IMPORTAMOS EL AUTH
 import '../styles/MisPedidos.css';
 
-const API_URL = 'http://localhost:3000/api';
-const TOKEN_KEY = 'token';
+const API_URL = '/api';
 
 const ESTADOS = {
   pendiente: { label: 'Pendiente', clase: 'pendiente' },
@@ -32,7 +32,6 @@ const formatearFecha = (f) => {
   });
 };
 
-// Acepta distintos nombres de campos que pueda devolver tu back
 const normalizarPedido = (p) => {
   const items = (p.items ?? p.productos ?? p.detalle ?? []).map((i) => ({
     nombre: i.nombre ?? i.producto ?? 'Producto',
@@ -113,6 +112,7 @@ function PedidoCard({ pedido, abierto, onToggle }) {
 }
 
 export default function MisPedidos() {
+  const { token } = useAuth(); // <--- LEEMOS EL TOKEN DEL CONTEXTO
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -120,7 +120,6 @@ export default function MisPedidos() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const token = localStorage.getItem(TOKEN_KEY);
 
     if (!token) {
       setError('Tenés que iniciar sesión para ver tus pedidos.');
@@ -144,7 +143,6 @@ export default function MisPedidos() {
         const lista = Array.isArray(data) ? data : data.pedidos ?? [];
         const normalizados = lista.map(normalizarPedido);
 
-        // los más recientes primero
         normalizados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         setPedidos(normalizados);
       } catch (err) {
@@ -157,7 +155,7 @@ export default function MisPedidos() {
     })();
 
     return () => controller.abort();
-  }, []);
+  }, [token]); // <--- AHORA DEPENDE DEL TOKEN DEL CONTEXTO
 
   return (
     <div className="pedidos-page">

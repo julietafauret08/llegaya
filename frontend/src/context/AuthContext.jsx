@@ -34,6 +34,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('usuario');
     setToken(null);
     setUsuario(null);
+    
+    // 👇 ESTA ES LA LÍNEA QUE HACE QUE SE VACÍE EL CARRITO
+    window.dispatchEvent(new Event('logout')); 
   };
 
   return (

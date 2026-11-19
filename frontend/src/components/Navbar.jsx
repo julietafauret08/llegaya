@@ -1,6 +1,8 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { ShoppingCart, LogOut, User } from 'lucide-react';
+import '../styles/Navbar.css';
 
 export default function Navbar() {
   const { usuario, logout } = useAuth();
@@ -12,37 +14,50 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const esAdmin = usuario?.rol === 'admin';
+
   return (
     <header className="navbar">
       <div className="navbar__interior">
-        <Link to="/" className="navbar__logo">
+        <Link to={esAdmin ? "/admin" : "/"} className="navbar__logo">
           Llega<span>Ya</span>
         </Link>
 
         <nav className="navbar__links">
-          <NavLink to="/">Inicio</NavLink>
-          {usuario && <NavLink to="/pedidos">Mis pedidos</NavLink>}
-          {usuario?.rol === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+          {!esAdmin && <NavLink to="/" className="nav-link">Inicio</NavLink>}
+          
+          {/* Links exclusivos de Cliente */}
+          {usuario && !esAdmin && (
+            <>
+              <NavLink to="/pedidos" className="nav-link">Mis pedidos</NavLink>
+              <NavLink to="/mi-cuenta" className="nav-link">Mi Cuenta</NavLink>
+            </>
+          )}
+          
+          {/* Link exclusivo de Admin */}
+          {esAdmin && <NavLink to="/admin" className="nav-link">Panel Admin</NavLink>}
 
-          <NavLink to="/carrito" className="navbar__carrito">
-            🛒 Carrito
-            {cantidadTotal > 0 && <span className="insignia">{cantidadTotal}</span>}
-          </NavLink>
+          {/* Carrito solo para Clientes */}
+          {!esAdmin && (
+            <NavLink to="/carrito" className="nav-link nav-carrito">
+              <ShoppingCart size={20} />
+              Carrito
+              {cantidadTotal > 0 && <span className="insignia">{cantidadTotal}</span>}
+            </NavLink>
+          )}
 
           {usuario ? (
-            <>
-              <span className="navbar__saludo">Hola, {usuario.nombre}</span>
-              <button className="boton boton--borde" onClick={salir}>
-                Salir
+            <div className="nav-user">
+              <span className="nav-saludo"><User size={18} /> {usuario.nombre}</span>
+              <button className="btn-salir" onClick={salir}>
+                <LogOut size={18} /> Salir
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <NavLink to="/login">Ingresar</NavLink>
-              <Link to="/registro" className="boton">
-                Registrarme
-              </Link>
-            </>
+            <div className="nav-user">
+              <NavLink to="/login" className="nav-link">Ingresar</NavLink>
+              <Link to="/registro" className="btn-registro">Registrarme</Link>
+            </div>
           )}
         </nav>
       </div>

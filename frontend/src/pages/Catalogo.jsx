@@ -1,85 +1,90 @@
-import { useEffect, useState } from 'react';
-import { apiFetch } from '../services/api.js';
-import ProductoCard from '../components/ProductoCard.jsx';
-import { alertaError } from '../utils/alertas.js';
+import { useState, useEffect } from 'react';
+import { Search } from 'lucide-react';
+import ProductoCard from '../components/ProductoCard';
+import { toast } from '../utils/alertas.js';
+import '../styles/Catalogo.css'; // Importamos su CSS
 
 export default function Catalogo() {
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [categoria, setCategoria] = useState('');
-  const [buscar, setBuscar] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [categoriaActiva, setCategoriaActiva] = useState(null);
   const [cargando, setCargando] = useState(true);
 
+  // Cargar productos y categorías
   useEffect(() => {
-    apiFetch('/productos/categorias')
-      .then(setCategorias)
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (categoria) params.set('categoria', categoria);
-    if (buscar.trim()) params.set('buscar', buscar.trim());
-
-    // Espera 300 ms después de escribir para no pedir al back en cada letra
-    const temporizador = setTimeout(async () => {
+    const fetchData = async () => {
       try {
-        setCargando(true);
-        const datos = await apiFetch(`/productos?${params.toString()}`);
-        setProductos(datos);
+        const [resProd, resCat] = await Promise.all([
+          fetch('/api/productos'),
+          fetch('/api/productos/categorias')
+        ]);
+        
+        if (resProd.ok) setProductos(await resProd.json());
+        if (resCat.ok) setCategorias(await resCat.json());
       } catch (err) {
-        alertaError('No se pudieron cargar los productos', err.message);
+        toast('Error al cargar el catálogo');
       } finally {
         setCargando(false);
       }
-    }, 300);
+    };
+    fetchData();
+  }, []);
 
-    return () => clearTimeout(temporizador);
-  }, [categoria, buscar]);
+  // Filtrar productos por búsqueda y categoría
+  const productosFiltrados = productos.filter((prod) => {
+    const coincideBusqueda = prod.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideCategoria = categoriaActiva ? prod.id_categoria === categoriaActiva : true;
+    return coincideBusqueda && coincideCategoria;
+  });
 
   return (
-    <section>
-      <div className="portada">
+    <div className="catalogo-page">
+      <section className="catalogo-hero">
         <h1>¿Qué se te antoja hoy?</h1>
         <p>Pedí tu comida favorita y te la llevamos a tu casa.</p>
-        <input
-          className="campo portada__buscador"
-          type="search"
-          placeholder="Buscar productos..."
-          value={buscar}
-          onChange={(e) => setBuscar(e.target.value)}
-        />
-      </div>
+        
+        <div className="buscador-container">
+          <Search className="search-icon" size={24} />
+          <input 
+            type="text" 
+            placeholder="Buscar productos..." 
+            className="buscador-input"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
+      </section>
 
-      <div className="filtros">
-        <button
-          className={`filtro ${categoria === '' ? 'filtro--activo' : ''}`}
-          onClick={() => setCategoria('')}
+      <section className="categorias-filtros">
+        <button 
+          className={`filtro-btn ${categoriaActiva === null ? 'activo' : ''}`}
+          onClick={() => setCategoriaActiva(null)}
         >
           Todos
         </button>
-        {categorias.map((c) => (
-          <button
-            key={c.id_categoria}
-            className={`filtro ${String(categoria) === String(c.id_categoria) ? 'filtro--activo' : ''}`}
-            onClick={() => setCategoria(c.id_categoria)}
+        {categorias.map((cat) => (
+          <button 
+            key={cat.id_categoria}
+            className={`filtro-btn ${categoriaActiva === cat.id_categoria ? 'activo' : ''}`}
+            onClick={() => setCategoriaActiva(cat.id_categoria)}
           >
-            {c.nombre}
+            {cat.nombre}
           </button>
         ))}
-      </div>
+      </section>
 
-      {cargando ? (
-        <p className="mensaje">Cargando productos...</p>
-      ) : productos.length === 0 ? (
-        <p className="mensaje">No encontramos productos con ese filtro.</p>
-      ) : (
-        <div className="grilla">
-          {productos.map((p) => (
-            <ProductoCard key={p.id_producto} producto={p} />
-          ))}
-        </div>
-      )}
-    </section>
+      <section className="productos-grid">
+        {cargando ? (
+          <p>Cargando productos...</p>
+        ) : productosFiltrados.length === 0 ? (
+          <p>No encontramos productos con esa búsqueda.</p>
+        ) : (
+          productosFiltrados.map((prod) => (
+            <ProductoCard key={prod.id_producto} producto={prod} />
+          ))
+        )}
+      </section>
+    </div>
   );
 }

@@ -1,0 +1,11 @@
+/* src/styles/Catalogo.css */
+.catalogo-hero { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); border-radius: 20px; padding: 3.5rem 2rem; text-align: center; color: white; margin-bottom: 2.5rem; box-shadow: 0 10px 20px rgba(255, 126, 95, 0.2); }
+.catalogo-hero h1 { font-size: 2.5rem; margin-bottom: 0.5rem; font-weight: 800; }
+.catalogo-hero p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 2rem; }
+.buscador-container { background: white; max-width: 600px; margin: 0 auto; border-radius: 50px; display: flex; align-items: center; padding: 0.5rem 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.search-icon { color: #9ca3af; }
+.buscador-input { border: none; outline: none; flex: 1; padding: 0.75rem 1rem; font-size: 1.1rem; background: transparent; }
+.categorias-filtros { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 2rem; }
+.filtro-btn { background: white; border: 1px solid var(--borde); padding: 0.6rem 1.5rem; border-radius: 30px; font-weight: 600; color: var(--suave); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.filtro-btn.activo, .filtro-btn:hover { background: var(--primario); color: white; border-color: var(--primario); }
+.productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2rem; }

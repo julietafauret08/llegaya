@@ -16,6 +16,14 @@ export function CartProvider({ children }) {
     localStorage.setItem('carrito', JSON.stringify(items));
   }, [items]);
 
+  // NUEVO: Escuchar cuando el usuario cierra sesión para vaciar el carrito
+  useEffect(() => {
+    const handleLogout = () => setItems([]);
+    window.addEventListener('logout', handleLogout);
+    
+    return () => window.removeEventListener('logout', handleLogout);
+  }, []);
+
   const agregar = (producto) => {
     setItems((prev) => {
       const existe = prev.find((i) => i.id_producto === producto.id_producto);
