@@ -24,10 +24,32 @@ export default function Registro() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 1. Validar campos vacíos
     if (!datos.nombre.trim() || !datos.apellido.trim() || !datos.email.trim() || !datos.password) {
       alertaAviso('Faltan datos', 'Completá nombre, apellido, email y contraseña.');
       return;
     }
+
+    // 2. Validar nombre y apellido (mínimo 2 letras)
+    if (datos.nombre.trim().length < 2 || datos.apellido.trim().length < 2) {
+      alertaAviso('Nombre inválido', 'El nombre y apellido deben tener al menos 2 letras.');
+      return;
+    }
+
+    // 3. Validar formato de Email (Regex)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(datos.email)) {
+      alertaAviso('Email inválido', 'Ingresá un correo electrónico válido (ej: usuario@dominio.com).');
+      return;
+    }
+
+    // 4. Validar teléfono (solo números, si es que se ingresó)
+    if (datos.telefono && !/^\d+$/.test(datos.telefono)) {
+      alertaAviso('Teléfono inválido', 'El teléfono solo debe contener números, sin espacios ni guiones.');
+      return;
+    }
+
+    // 5. Validar contraseña
     if (datos.password.length < 6) {
       alertaAviso('Contraseña corta', 'Debe tener al menos 6 caracteres.');
       return;
@@ -41,7 +63,7 @@ export default function Registro() {
       setEnviando(true);
       const { confirmar, ...paraEnviar } = datos;
       await registro(paraEnviar);
-      await alertaExito('¡Cuenta creada!', 'Ahora podés ingresar.');
+      await alertaExito('¡Cuenta creada!', 'Te enviamos un correo de bienvenida. Ahora podés ingresar.');
       navigate('/login');
     } catch (err) {
       alertaError('No pudimos registrarte', err.message);
@@ -57,11 +79,11 @@ export default function Registro() {
         <div className="fila">
           <label>
             Nombre
-            <input className="campo" name="nombre" value={datos.nombre} onChange={cambiar} />
+            <input className="campo" name="nombre" value={datos.nombre} onChange={cambiar} minLength={2} />
           </label>
           <label>
             Apellido
-            <input className="campo" name="apellido" value={datos.apellido} onChange={cambiar} />
+            <input className="campo" name="apellido" value={datos.apellido} onChange={cambiar} minLength={2} />
           </label>
         </div>
 
@@ -73,7 +95,7 @@ export default function Registro() {
         <div className="fila">
           <label>
             Teléfono (opcional)
-            <input className="campo" name="telefono" value={datos.telefono} onChange={cambiar} />
+            <input className="campo" name="telefono" value={datos.telefono} onChange={cambiar} pattern="[0-9]+" title="Solo números" />
           </label>
           <label>
             Dirección (opcional)
@@ -90,6 +112,7 @@ export default function Registro() {
               name="password"
               value={datos.password}
               onChange={cambiar}
+              minLength={6}
             />
           </label>
           <label>
@@ -100,6 +123,7 @@ export default function Registro() {
               name="confirmar"
               value={datos.confirmar}
               onChange={cambiar}
+              minLength={6}
             />
           </label>
         </div>

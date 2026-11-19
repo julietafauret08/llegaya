@@ -57,13 +57,19 @@ exports.obtener = async (req, res) => {
   }
 };
 
+// Función de validación mejorada
 const validar = ({ nombre, precio, stock }) => {
   if (!nombre || !nombre.trim()) return 'El nombre es obligatorio';
-  if (precio === undefined || isNaN(precio) || Number(precio) < 0) return 'El precio no es válido';
-  if (stock === undefined || !Number.isInteger(Number(stock)) || Number(stock) < 0) return 'El stock no es válido';
+  if (nombre.length > 100) return 'El nombre es demasiado largo';
+  
+  if (precio === undefined || isNaN(precio) || Number(precio) <= 0) return 'El precio debe ser mayor a 0';
+  
+  if (stock === undefined || !Number.isInteger(Number(stock)) || Number(stock) < 0) return 'El stock no puede ser negativo';
+  
   return null;
 };
 
+// CREAR PRODUCTO (Esta era la función que faltaba)
 exports.crear = async (req, res) => {
   try {
     const error = validar(req.body);
@@ -83,6 +89,7 @@ exports.crear = async (req, res) => {
   }
 };
 
+// MODIFICAR PRODUCTO
 exports.modificar = async (req, res) => {
   try {
     const error = validar(req.body);
@@ -106,7 +113,7 @@ exports.modificar = async (req, res) => {
   }
 };
 
-// No se borra de verdad: se oculta (activo = 0), así no se rompen los pedidos viejos
+// ELIMINAR PRODUCTO (Lógica)
 exports.eliminar = async (req, res) => {
   try {
     const [resultado] = await pool.query(

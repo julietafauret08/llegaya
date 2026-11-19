@@ -15,11 +15,10 @@ export default function Admin() {
   const [metricas, setMetricas] = useState({ recaudacionTotal: 0, pedidosTotales: 0, ventasHoy: 0 });
   const [pedidos, setPedidos] = useState([]);
   const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]); // NUEVO: Para el selector
+  const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [tabActiva, setTabActiva] = useState('metricas');
 
-  // Estado para el formulario de Productos
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
   const [formProducto, setFormProducto] = useState({
@@ -32,17 +31,15 @@ export default function Admin() {
         fetch('/api/pedidos/admin/metricas', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/pedidos', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/productos'),
-        fetch('/api/productos/categorias') // Traemos las categorías
+        fetch('/api/productos/categorias')
       ]);
 
       if (resMetricas.ok) setMetricas(await resMetricas.json());
-      
       if (resPedidos.ok) {
         const data = await resPedidos.json();
         data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
         setPedidos(data);
       }
-
       if (resProductos.ok) setProductos(await resProductos.json());
       if (resCategorias.ok) setCategorias(await resCategorias.json());
     } catch (err) {
@@ -71,7 +68,6 @@ export default function Admin() {
     }
   };
 
-  // --- LÓGICA DE PRODUCTOS ---
   const abrirModalNuevo = () => {
     setProductoEditando(null);
     setFormProducto({ nombre: '', descripcion: '', precio: '', stock: '', id_categoria: categorias[0]?.id_categoria || '', imagen: '' });
@@ -89,6 +85,12 @@ export default function Admin() {
 
   const guardarProducto = async (e) => {
     e.preventDefault();
+
+    // NUEVO: Validación antes de enviar
+    if (Number(formProducto.precio) <= 0) return toast('El precio debe ser mayor a 0');
+    if (Number(formProducto.stock) < 0) return toast('El stock no puede ser negativo');
+    if (formProducto.nombre.trim().length < 3) return toast('El nombre es demasiado corto');
+
     const url = productoEditando ? `/api/productos/${productoEditando.id_producto}` : '/api/productos';
     const method = productoEditando ? 'PUT' : 'POST';
 
@@ -99,11 +101,12 @@ export default function Admin() {
         body: JSON.stringify(formProducto)
       });
       
-      if (!res.ok) throw new Error('Error al guardar el producto');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar el producto');
       
       toast(productoEditando ? 'Producto actualizado' : 'Producto creado');
       setModalAbierto(false);
-      cargarDatos(); // Recargar la lista
+      cargarDatos();
     } catch (err) {
       toast(err.message);
     }
@@ -215,7 +218,6 @@ export default function Admin() {
         )}
       </main>
 
-      {/* MODAL PARA CREAR/EDITAR PRODUCTO */}
       {modalAbierto && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -225,17 +227,17 @@ export default function Admin() {
             </div>
             <form onSubmit={guardarProducto} className="modal-form">
               <label>Nombre del producto
-                <input type="text" required value={formProducto.nombre} onChange={e => setFormProducto({...formProducto, nombre: e.target.value})} />
+                <input type="text" required value={formProducto.nombre} onChange={e => setFormProducto({...formProducto, nombre: e.target.value})} minLength={3} />
               </label>
               <label>Descripción
                 <textarea rows="2" value={formProducto.descripcion} onChange={e => setFormProducto({...formProducto, descripcion: e.target.value})} />
               </label>
               <div className="modal-row">
                 <label>Precio
-                  <input type="number" required value={formProducto.precio} onChange={e => setFormProducto({...formProducto, precio: e.target.value})} />
+                  <input type="number" required min="1" value={formProducto.precio} onChange={e => setFormProducto({...formProducto, precio: e.target.value})} />
                 </label>
                 <label>Stock
-                  <input type="number" required value={formProducto.stock} onChange={e => setFormProducto({...formProducto, stock: e.target.value})} />
+                  <input type="number" required min="0" value={formProducto.stock} onChange={e => setFormProducto({...formProducto, stock: e.target.value})} />
                 </label>
               </div>
               <label>Categoría

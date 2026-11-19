@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer'); // NUEVO
+const nodemailer = require('nodemailer');
 const pool = require('../db');
 
 const crearToken = (usuario) =>
@@ -12,11 +12,23 @@ const crearToken = (usuario) =>
 
 exports.registro = async (req, res) => {
   try {
+    // 1. Extraemos las variables primero
     const { nombre, apellido, email, password, telefono, direccion } = req.body;
 
+    // 2. Validaciones
     if (!nombre || !apellido || !email || !password) {
       return res.status(400).json({ error: 'Completá nombre, apellido, email y contraseña' });
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'El formato del email no es válido' });
+    }
+    
+    if (telefono && !/^\d+$/.test(telefono)) {
+      return res.status(400).json({ error: 'El teléfono solo debe contener números' });
+    }
+    
     if (password.length < 6) {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
@@ -38,6 +50,40 @@ exports.registro = async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?)`,
       [nombre.trim(), apellido.trim(), emailLimpio, hash, telefono || null, direccion || null]
     );
+
+    // 3. Enviar correo de bienvenida (Lo envolvemos en try/catch para que no falle el registro si falla el correo)
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      await transporter.sendMail({
+        from: '"LlegaYa" <no-reply@llegaya.com>',
+        to: emailLimpio,
+        subject: '¡Bienvenido/a a LlegaYa! 🛵',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px;">
+            <h1 style="color: #e63946;">¡Hola, ${nombre.trim()}!</h1>
+            <p style="font-size: 16px; color: #4b5563;">
+              Tu cuenta en LlegaYa fue creada con éxito. A partir de ahora vas a poder pedir tu comida favorita y recibirla en la puerta de tu casa.
+            </p>
+            <div style="margin: 30px 0;">
+              <a href="${process.env.FRONTEND_URL}" style="background: #e63946; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                Ir a la tienda
+              </a>
+            </div>
+            <p style="font-size: 12px; color: #9ca3af;">Si no creaste esta cuenta, por favor ignorá este mensaje.</p>
+          </div>
+        `
+      });
+    } catch (errorCorreo) {
+      console.error("Error al enviar correo de bienvenida:", errorCorreo);
+      // No cortamos la ejecución, el usuario ya se guardó en la BD
+    }
 
     res.status(201).json({ mensaje: 'Usuario registrado', id_usuario: resultado.insertId });
   } catch (err) {
@@ -101,10 +147,6 @@ exports.perfil = async (req, res) => {
   }
 };
 
-// ==========================================
-// NUEVO: RECUPERACIÓN DE CONTRASEÑA
-// ==========================================
-
 exports.solicitarRecuperacion = async (req, res) => {
   const { email } = req.body;
   try {
@@ -112,8 +154,6 @@ exports.solicitarRecuperacion = async (req, res) => {
     if (filas.length === 0) return res.status(404).json({ error: 'El email no está registrado' });
 
     const usuario = filas[0];
-    
-    // Token temporal que dura 1 hora
     const token = jwt.sign({ id: usuario.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     const transporter = nodemailer.createTransport({
@@ -166,10 +206,11 @@ exports.restablecerPassword = async (req, res) => {
     res.status(400).json({ error: 'El enlace es inválido o expiró' });
   }
 };
+
 exports.actualizarPerfil = async (req, res) => {
   try {
     const { nombre, apellido, telefono, direccion } = req.body;
-    const id_usuario = req.usuario.id; // Viene del token
+    const id_usuario = req.usuario.id;
 
     if (!nombre || !apellido) {
       return res.status(400).json({ error: 'El nombre y apellido son obligatorios' });
