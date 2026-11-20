@@ -10,6 +10,6 @@
 .insignia { position: absolute; top: -8px; right: -12px; background: var(--primario); color: white; font-size: 0.7rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .nav-user { display: flex; align-items: center; gap: 1rem; border-left: 1px solid var(--borde); padding-left: 1.5rem; }
 .nav-saludo { font-weight: 600; color: #374151; display: flex; align-items: center; gap: 0.4rem; }
-.btn-salir { background: none; border: none; color: #dc2626; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
+.btn-salir { background: none; border: none; color: rgb(220, 38, 38); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
 .btn-registro { background: var(--primario); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: background 0.2s; }
 .btn-registro:hover { background: var(--primario-oscuro); }

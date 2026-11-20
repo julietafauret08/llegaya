@@ -12,6 +12,7 @@ import './styles/global.css';
 import RecuperarPassword from './pages/RecuperarPassword.jsx';
 import RestablecerPassword from './pages/RestablecerPassword.jsx';
 import MiCuenta from './pages/MiCuenta.jsx';
+import ProductoDetalle from './pages/ProductoDetalle.jsx';
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
 <Route path="/restablecer-password/:token" element={<RestablecerPassword />} />
 <Route path="/mi-cuenta" element={<RutaSoloCliente><MiCuenta /></RutaSoloCliente>} />
+<Route path="/producto/:id" element={<RutaSoloCliente><ProductoDetalle /></RutaSoloCliente>} />
         </Routes>
       </main>
     </>

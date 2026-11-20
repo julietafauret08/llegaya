@@ -2,15 +2,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { alertaAviso, alertaError, alertaExito } from '../utils/alertas.js';
+import { User, Mail, Lock, Phone, MapPin, UserPlus } from 'lucide-react';
+import '../styles/Auth.css';
 
 const inicial = {
-  nombre: '',
-  apellido: '',
-  email: '',
-  telefono: '',
-  direccion: '',
-  password: '',
-  confirmar: ''
+  nombre: '', apellido: '', email: '', telefono: '', direccion: '', password: '', confirmar: ''
 };
 
 export default function Registro() {
@@ -24,39 +20,24 @@ export default function Registro() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Validar campos vacíos
     if (!datos.nombre.trim() || !datos.apellido.trim() || !datos.email.trim() || !datos.password) {
-      alertaAviso('Faltan datos', 'Completá nombre, apellido, email y contraseña.');
-      return;
+      return alertaAviso('Faltan datos', 'Completá nombre, apellido, email y contraseña.');
     }
-
-    // 2. Validar nombre y apellido (mínimo 2 letras)
     if (datos.nombre.trim().length < 2 || datos.apellido.trim().length < 2) {
-      alertaAviso('Nombre inválido', 'El nombre y apellido deben tener al menos 2 letras.');
-      return;
+      return alertaAviso('Nombre inválido', 'El nombre y apellido deben tener al menos 2 letras.');
     }
-
-    // 3. Validar formato de Email (Regex)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(datos.email)) {
-      alertaAviso('Email inválido', 'Ingresá un correo electrónico válido (ej: usuario@dominio.com).');
-      return;
+      return alertaAviso('Email inválido', 'Ingresá un correo electrónico válido.');
     }
-
-    // 4. Validar teléfono (solo números, si es que se ingresó)
     if (datos.telefono && !/^\d+$/.test(datos.telefono)) {
-      alertaAviso('Teléfono inválido', 'El teléfono solo debe contener números, sin espacios ni guiones.');
-      return;
+      return alertaAviso('Teléfono inválido', 'El teléfono solo debe contener números.');
     }
-
-    // 5. Validar contraseña
     if (datos.password.length < 6) {
-      alertaAviso('Contraseña corta', 'Debe tener al menos 6 caracteres.');
-      return;
+      return alertaAviso('Contraseña corta', 'Debe tener al menos 6 caracteres.');
     }
     if (datos.password !== datos.confirmar) {
-      alertaAviso('Las contraseñas no coinciden', 'Revisá que sean iguales.');
-      return;
+      return alertaAviso('Las contraseñas no coinciden', 'Revisá que sean iguales.');
     }
 
     try {
@@ -73,69 +54,67 @@ export default function Registro() {
   };
 
   return (
-    <section className="tarjeta-formulario">
-      <h2>Crear cuenta</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="fila">
-          <label>
-            Nombre
-            <input className="campo" name="nombre" value={datos.nombre} onChange={cambiar} minLength={2} />
-          </label>
-          <label>
-            Apellido
-            <input className="campo" name="apellido" value={datos.apellido} onChange={cambiar} minLength={2} />
-          </label>
+    <div className="auth-container">
+      <div className="auth-brand" style={{ background: 'linear-gradient(135deg, #e63946 0%, #ff7e5f 100%)' }}>
+        <div className="auth-brand-logo">Llega<span style={{ color: '#111' }}>Ya</span></div>
+        <h2>Creá tu cuenta</h2>
+        <p>Unite a nosotros y empezá a disfrutar de la mejor comida, rápido y fácil.</p>
+      </div>
+
+      <div className="auth-form-wrapper">
+        <div className="auth-form">
+          <h2>Registrarme</h2>
+          <p className="auth-subtitle">Completá tus datos para crear tu perfil.</p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="auth-form-row">
+              <div className="auth-input-group">
+                <User className="auth-input-icon" size={20} />
+                <input type="text" name="nombre" value={datos.nombre} onChange={cambiar} placeholder="Nombre" />
+              </div>
+              <div className="auth-input-group">
+                <User className="auth-input-icon" size={20} />
+                <input type="text" name="apellido" value={datos.apellido} onChange={cambiar} placeholder="Apellido" />
+              </div>
+            </div>
+
+            <div className="auth-input-group">
+              <Mail className="auth-input-icon" size={20} />
+              <input type="email" name="email" value={datos.email} onChange={cambiar} placeholder="Correo electrónico" />
+            </div>
+
+            <div className="auth-form-row">
+              <div className="auth-input-group">
+                <Phone className="auth-input-icon" size={20} />
+                <input type="text" name="telefono" value={datos.telefono} onChange={cambiar} placeholder="Teléfono (opc)" />
+              </div>
+              <div className="auth-input-group">
+                <MapPin className="auth-input-icon" size={20} />
+                <input type="text" name="direccion" value={datos.direccion} onChange={cambiar} placeholder="Dirección (opc)" />
+              </div>
+            </div>
+
+            <div className="auth-form-row">
+              <div className="auth-input-group">
+                <Lock className="auth-input-icon" size={20} />
+                <input type="password" name="password" value={datos.password} onChange={cambiar} placeholder="Contraseña" />
+              </div>
+              <div className="auth-input-group">
+                <Lock className="auth-input-icon" size={20} />
+                <input type="password" name="confirmar" value={datos.confirmar} onChange={cambiar} placeholder="Repetir contraseña" />
+              </div>
+            </div>
+
+            <button className="auth-btn-submit" disabled={enviando}>
+              {enviando ? 'Creando cuenta...' : <><UserPlus size={20} /> Crear Cuenta</>}
+            </button>
+          </form>
+
+          <div className="auth-links">
+            <span>¿Ya tenés cuenta? <Link to="/login">Ingresá</Link></span>
+          </div>
         </div>
-
-        <label>
-          Email
-          <input className="campo" type="email" name="email" value={datos.email} onChange={cambiar} />
-        </label>
-
-        <div className="fila">
-          <label>
-            Teléfono (opcional)
-            <input className="campo" name="telefono" value={datos.telefono} onChange={cambiar} pattern="[0-9]+" title="Solo números" />
-          </label>
-          <label>
-            Dirección (opcional)
-            <input className="campo" name="direccion" value={datos.direccion} onChange={cambiar} />
-          </label>
-        </div>
-
-        <div className="fila">
-          <label>
-            Contraseña
-            <input
-              className="campo"
-              type="password"
-              name="password"
-              value={datos.password}
-              onChange={cambiar}
-              minLength={6}
-            />
-          </label>
-          <label>
-            Repetir contraseña
-            <input
-              className="campo"
-              type="password"
-              name="confirmar"
-              value={datos.confirmar}
-              onChange={cambiar}
-              minLength={6}
-            />
-          </label>
-        </div>
-
-        <button className="boton boton--ancho" disabled={enviando}>
-          {enviando ? 'Creando cuenta...' : 'Registrarme'}
-        </button>
-      </form>
-
-      <p className="pie-formulario">
-        ¿Ya tenés cuenta? <Link to="/login">Ingresá</Link>
-      </p>
-    </section>
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Importamos useNavigate
 import { useCart } from '../context/CartContext.jsx';
 import { formatearPrecio } from '../utils/formato.js';
 import { toast } from '../utils/alertas.js';
@@ -7,16 +8,29 @@ import '../styles/ProductoCard.css';
 
 export default function ProductoCard({ producto }) {
   const { agregar } = useCart();
+  const navigate = useNavigate(); // Para redirigir
   const [sinImagen, setSinImagen] = useState(!producto.imagen);
   const agotado = producto.stock < 1;
 
-  const handleAgregar = () => {
+  // Detenemos la propagación para que al hacer clic en "Agregar" no te lleve al detalle
+  const handleAgregar = (e) => {
+    e.stopPropagation(); 
+    e.preventDefault();
     agregar(producto);
     toast('Agregado al carrito');
   };
 
+  // Al hacer clic en la tarjeta, vamos al detalle
+  const handleCardClick = () => {
+    navigate(`/producto/${producto.id_producto}`);
+  };
+
   return (
-    <article className="producto">
+    <article 
+      className="producto" 
+      onClick={handleCardClick} 
+      style={{ cursor: 'pointer' }} // Para que se vea que es clickeable
+    >
       <div className="producto__imagen">
         {sinImagen ? (
           <span className="producto__emoji">🍽️</span>

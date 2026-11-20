@@ -1,0 +1,180 @@
+/* src/styles/Auth.css */
+.auth-container {
+  display: flex;
+  min-height: calc(100vh - 80px); /* Ajuste por el Navbar */
+  background-color: #f8f9fa;
+  margin: -24px -16px; /* Para que ocupe toda la pantalla ignorando el contenedor global */
+}
+
+/* Lado Izquierdo (Branding) */
+.auth-brand {
+  flex: 1;
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: white;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-brand::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+
+.auth-brand::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+
+.auth-brand-logo {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  z-index: 1;
+}
+
+.auth-brand-logo span { color: #111; }
+
+.auth-brand h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  z-index: 1;
+}
+
+.auth-brand p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  max-width: 400px;
+  z-index: 1;
+}
+
+/* Lado Derecho (Formulario) */
+.auth-form-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: white;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-form h2 {
+  font-size: 2rem;
+  color: #111;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  color: #6b7280;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.auth-input-group {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.auth-input-group input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.8rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background: #f9fafb;
+}
+
+.auth-input-group input:focus {
+  border-color: #e63946;
+  background: white;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+}
+
+.auth-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.auth-btn-submit {
+  width: 100%;
+  background: #e63946;
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+
+.auth-btn-submit:hover {
+  background: #c1121f;
+}
+
+.auth-links {
+  margin-top: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.auth-links a {
+  color: #e63946;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* Ocultar la parte naranja en celulares */
+@media (max-width: 768px) {
+  .auth-brand {
+    display: none;
+  }
+  .auth-container {
+    background: #f8f9fa;
+  }
+  .auth-form-wrapper {
+    padding: 1rem;
+  }
+}
